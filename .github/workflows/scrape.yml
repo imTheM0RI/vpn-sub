@@ -21,14 +21,45 @@ jobs:
           python-version: "3.11"
 
       - name: Install deps
-        run: pip install -r requirements.txt
+        run: |
+          echo "▶ نصب کتابخانه‌ها..."
+          pip install -r requirements.txt
+          echo "▶ تست import:"
+          python -c "import telethon; print('telethon:', telethon.__version__)"
+
+      - name: Check secrets
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+        run: |
+          echo "▶ چک کردن Secrets:"
+          if [ -z "$API_ID" ]; then echo "❌ API_ID خالی است!"; else echo "✅ API_ID موجود (طول: ${#API_ID})"; fi
+          if [ -z "$API_HASH" ]; then echo "❌ API_HASH خالی است!"; else echo "✅ API_HASH موجود (طول: ${#API_HASH})"; fi
+          if [ -z "$SESSION_STRING" ]; then echo "❌ SESSION_STRING خالی است!"; else echo "✅ SESSION_STRING موجود (طول: ${#SESSION_STRING})"; fi
 
       - name: Run scraper
         env:
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
           SESSION_STRING: ${{ secrets.SESSION_STRING }}
-        run: python main.py
+        run: |
+          echo "▶ شروع اجرای اسکریپت:"
+          python -u main.py
+          echo "▶ پایان اجرا (exit code: $?)"
+
+      - name: Check output
+        if: always()
+        run: |
+          echo "▶ محتوای پوشه:"
+          ls -la
+          echo "▶ آیا sub.txt وجود دارد؟"
+          if [ -f sub.txt ]; then
+            echo "✅ بله، محتوا:"
+            head -5 sub.txt
+          else
+            echo "❌ نه، فایل ساخته نشده."
+          fi
 
       - name: Commit and push
         if: always()
@@ -44,5 +75,5 @@ jobs:
               git push
             fi
           else
-            echo "⚠️ فایل sub.txt ساخته نشد. یعنی اسکریپت کانفیگی پیدا نکرده."
+            echo "⚠️ فایل sub.txt نیست، چیزی برای commit کردن نداریم."
           fi
