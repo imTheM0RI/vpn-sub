@@ -31,13 +31,18 @@ jobs:
         run: python main.py
 
       - name: Commit and push
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sub.txt
-          if git diff --staged --quiet; then
-            echo "no change"
+          if [ -f sub.txt ]; then
+            git add sub.txt
+            if git diff --staged --quiet; then
+              echo "بدون تغییر"
+            else
+              git commit -m "update sub.txt [skip ci]"
+              git push
+            fi
           else
-            git commit -m "update sub.txt [skip ci]"
-            git push
+            echo "⚠️ فایل sub.txt ساخته نشد. یعنی اسکریپت کانفیگی پیدا نکرده."
           fi
